@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "temporal-spec": "^0.3.1"
+  }
+}
