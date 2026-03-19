@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #10B981;
+  --color-primary-dark: #059669;
+  --color-primary-light: #34D399;
+  
+  --color-background-light: #F8FAFC;
+  --color-background-dark: #020617;
+
+  --backdrop-blur-xs: 2px;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-slate-900 dark:text-slate-100;
+    background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.05), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.05), transparent 40%),
+                var(--color-background-light);
+  }
+
+  .dark body {
+    background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.1), transparent 40%),
+                radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.1), transparent 40%),
+                var(--color-background-dark);
+  }
+}
+
+@utility glass {
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  @variant dark {
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+@utility btn-primary {
+  @apply bg-gradient-to-br from-primary to-primary-dark text-white font-semibold py-2.5 px-5 rounded-2xl transition-all duration-300 shadow-lg shadow-primary/20 active:scale-95 hover:brightness-110;
+}
+
+.card {
+  @apply glass rounded-[2rem] p-8 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-2xl hover:shadow-primary/20;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+

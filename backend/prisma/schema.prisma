@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  GYM
+}
+
+enum MemberStatus {
+  ACTIVE
+  EXPIRED
+  INACTIVE
+}
+
+enum NotificationType {
+  ANNOUNCEMENT
+  REMINDER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role     @default(GYM)
+  gyms      Gym[]    @relation("GymOwner")
+  branchGym Gym?     @relation("GymBranch", fields: [branchGymId], references: [id])
+  branchGymId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Gym {
+  id              String           @id @default(cuid())
+  name            String
+  address         String
+  phone           String?
+  owner           User             @relation("GymOwner", fields: [ownerId], references: [id])
+  ownerId         String
+  members         Member[]
+  plans           MembershipPlan[]
+  attendance      Attendance[]
+  notifications   Notification[]
+  payments        Payment[]
+  branchUsers     User[]           @relation("GymBranch")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Member {
+  id             String         @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  gym            Gym            @relation(fields: [gymId], references: [id])
+  gymId          String
+  status         MemberStatus   @default(ACTIVE)
+  bloodGroup     String?
+  photoUrl       String?
+  joinDate       DateTime       @default(now())
+  expiryDate     DateTime?
+  attendance     Attendance[]
+  payments       Payment[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model MembershipPlan {
+  id             String    @id @default(cuid())
+  name           String
+  description    String?
+  price          Float
+  durationMonths Int
+  gym            Gym       @relation(fields: [gymId], references: [id])
+  gymId          String
+  payments       Payment[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  member      Member   @relation(fields: [memberId], references: [id])
+  memberId    String
+  gym         Gym      @relation(fields: [gymId], references: [id])
+  gymId       String
+  date        DateTime @default(now())
+  checkInTime DateTime @default(now())
+}
+
+model Payment {
+  id        String         @id @default(cuid())
+  member    Member         @relation(fields: [memberId], references: [id])
+  memberId  String
+  gym       Gym            @relation(fields: [gymId], references: [id])
+  gymId     String
+  amount    Float
+  date      DateTime       @default(now())
+  method    String
+  plan      MembershipPlan @relation(fields: [planId], references: [id])
+  planId    String
+  createdAt DateTime       @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(ANNOUNCEMENT)
+  gym       Gym              @relation(fields: [gymId], references: [id])
+  gymId     String
+  createdAt DateTime         @default(now())
+}
