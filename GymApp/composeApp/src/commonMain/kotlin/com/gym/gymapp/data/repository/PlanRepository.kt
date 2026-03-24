@@ -8,6 +8,8 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 
 import com.gym.gymapp.data.models.ApiResponse
+import com.gym.gymapp.ui.components.NotificationManager
+import com.gym.gymapp.ui.components.AppNotificationType
 
 class PlanRepository {
     private val client = NetworkClient.client
@@ -18,7 +20,12 @@ class PlanRepository {
         }
         return if (response.status == HttpStatusCode.OK) {
             val apiResponse: ApiResponse<List<MembershipPlan>> = response.body()
-            apiResponse.data
+            if (!apiResponse.status) {
+                NotificationManager.showNotification(apiResponse.message, AppNotificationType.ERROR)
+                emptyList()
+            } else {
+                apiResponse.data
+            }
         } else {
             emptyList()
         }
@@ -30,7 +37,14 @@ class PlanRepository {
             contentType(ContentType.Application.Json)
             setBody(plan)
         }
-        return response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK
+        if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
+            val apiResponse: ApiResponse<MembershipPlan> = response.body()
+            if (!apiResponse.status) {
+                NotificationManager.showNotification(apiResponse.message, AppNotificationType.ERROR)
+            }
+            return apiResponse.status
+        }
+        return false
     }
 
     suspend fun updatePlan(planId: String, plan: MembershipPlan): Boolean {

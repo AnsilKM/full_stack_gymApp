@@ -8,12 +8,17 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
+import com.gym.gymapp.ui.components.NotificationManager
+import com.gym.gymapp.ui.components.AppNotificationType
 
 class MemberRepository {
     private val client = NetworkClient.client
     
-    suspend fun getMembers(gymId: String? = null, page: Int = 1, limit: Int = 50): Result<List<Member>> {
-        return try {
+    suspend fun getMembers(gymId: String? = null, page: Int = 1, limit: Int = 50): Result<List<Member>> = withContext(Dispatchers.IO) {
+        return@withContext try {
             val response: ApiResponse<List<Member>> = client.get(ApiEndpoints.MEMBERS) {
                 if (gymId != null) {
                     parameter("gymId", gymId)
@@ -21,6 +26,10 @@ class MemberRepository {
                 parameter("page", page)
                 parameter("limit", limit)
             }.body()
+            if (!response.status) {
+                NotificationManager.showNotification(response.message, AppNotificationType.ERROR)
+                return@withContext Result.failure(Exception(response.message))
+            }
             Result.success(response.data)
         } catch (e: Exception) {
             Result.failure(e)

@@ -6,24 +6,37 @@ import com.gym.gymapp.network.NetworkClient
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
+import com.gym.gymapp.ui.components.NotificationManager
+import com.gym.gymapp.ui.components.AppNotificationType
 
 class GymRepository {
     private val client = NetworkClient.client
     
-    suspend fun getGyms(): Result<List<Gym>> {
-        return try {
+    suspend fun getGyms(): Result<List<Gym>> = withContext(Dispatchers.IO) {
+        return@withContext try {
             val response: ApiResponse<List<Gym>> = client.get(ApiEndpoints.GYMS).body()
+            if (!response.status) {
+                NotificationManager.showNotification(response.message, AppNotificationType.ERROR)
+                return@withContext Result.failure(Exception(response.message))
+            }
             Result.success(response.data)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getDashboardStats(gymId: String): Result<DashboardStats> {
-        return try {
+    suspend fun getDashboardStats(gymId: String): Result<DashboardStats> = withContext(Dispatchers.IO) {
+        return@withContext try {
             val response: ApiResponse<DashboardStats> = client.get(ApiEndpoints.DASHBOARD_STATS) {
                 parameter("gymId", gymId)
             }.body()
+            if (!response.status) {
+                NotificationManager.showNotification(response.message, AppNotificationType.ERROR)
+                return@withContext Result.failure(Exception(response.message))
+            }
             Result.success(response.data)
         } catch (e: Exception) {
             Result.failure(e)

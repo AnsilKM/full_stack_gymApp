@@ -8,7 +8,7 @@ import platform.Foundation.timeIntervalSince1970
 
 class IOSPlatform: Platform {
     override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
-    override val baseUrl: String = "http://localhost:3000"
+    override val baseUrl: String = "https://full-stack-gymapp.onrender.com"
     override val cacheDir: String? get() = platform.Foundation.NSSearchPathForDirectoriesInDomains(
         platform.Foundation.NSCachesDirectory,
         platform.Foundation.NSUserDomainMask,

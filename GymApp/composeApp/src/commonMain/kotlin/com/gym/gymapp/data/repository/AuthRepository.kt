@@ -9,6 +9,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 
 import com.gym.gymapp.data.repository.SessionManager
+import com.gym.gymapp.ui.components.NotificationManager
+import com.gym.gymapp.ui.components.AppNotificationType
 
 class AuthRepository(private val sessionManager: SessionManager) {
     private val client = NetworkClient.client
@@ -21,6 +23,12 @@ class AuthRepository(private val sessionManager: SessionManager) {
             }
             if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
                 val apiResponse: com.gym.gymapp.data.models.ApiResponse<LoginResponse> = response.body()
+                
+                if (!apiResponse.status) {
+                    NotificationManager.showNotification(apiResponse.message, AppNotificationType.ERROR)
+                    return Result.failure(Exception(apiResponse.message))
+                }
+
                 val loginData = apiResponse.data
                 
                 // Persist session
@@ -35,11 +43,17 @@ class AuthRepository(private val sessionManager: SessionManager) {
                 NetworkClient.authToken = loginData.access_token
                 NetworkClient.currentUser = loginData.user
                 NetworkClient.gymId = targetGymId
-
                 
                 Result.success(loginData)
             } else {
-                Result.failure(Exception("Login failed: ${response.status}"))
+                val errorMessage = try {
+                    val errorBody: com.gym.gymapp.data.models.ApiResponse<Unit?> = response.body()
+                    errorBody.message
+                } catch (e: Exception) {
+                    "Login failed: ${response.status}"
+                }
+                NotificationManager.showNotification(errorMessage, AppNotificationType.ERROR)
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -54,6 +68,11 @@ class AuthRepository(private val sessionManager: SessionManager) {
             }
             if (response.status == HttpStatusCode.Created || response.status == HttpStatusCode.OK) {
                 val apiResponse: com.gym.gymapp.data.models.ApiResponse<LoginResponse> = response.body()
+
+                if (!apiResponse.status) {
+                    NotificationManager.showNotification(apiResponse.message, AppNotificationType.ERROR)
+                    return Result.failure(Exception(apiResponse.message))
+                }
 
                 val loginData = apiResponse.data
                 
@@ -73,7 +92,14 @@ class AuthRepository(private val sessionManager: SessionManager) {
                 
                 Result.success(loginData)
             } else {
-                Result.failure(Exception("Registration failed: ${response.status}"))
+                val errorMessage = try {
+                    val errorBody: com.gym.gymapp.data.models.ApiResponse<Unit?> = response.body()
+                    errorBody.message
+                } catch (e: Exception) {
+                    "Registration failed: ${response.status}"
+                }
+                NotificationManager.showNotification(errorMessage, AppNotificationType.ERROR)
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)

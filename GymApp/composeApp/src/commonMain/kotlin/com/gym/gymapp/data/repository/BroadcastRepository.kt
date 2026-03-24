@@ -5,6 +5,8 @@ import com.gym.gymapp.network.NetworkClient
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import com.gym.gymapp.ui.components.NotificationManager
+import com.gym.gymapp.ui.components.AppNotificationType
 
 class BroadcastRepository {
     private val client = NetworkClient.client
@@ -16,6 +18,9 @@ class BroadcastRepository {
             setBody(request)
         }
         val apiResponse: ApiResponse<BroadcastResponse> = response.body()
+        if (!apiResponse.status) {
+            NotificationManager.showNotification(apiResponse.message, AppNotificationType.ERROR)
+        }
         return apiResponse.data
     }
 
@@ -25,7 +30,12 @@ class BroadcastRepository {
         }
         return if (response.status == HttpStatusCode.OK) {
             val apiResponse: ApiResponse<List<BroadcastLog>> = response.body()
-            apiResponse.data
+            if (!apiResponse.status) {
+                NotificationManager.showNotification(apiResponse.message, AppNotificationType.ERROR)
+                emptyList()
+            } else {
+                apiResponse.data
+            }
         } else {
             emptyList()
         }

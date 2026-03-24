@@ -32,7 +32,7 @@ class DashboardViewModel(
         private set
 
     init {
-        loadDashboardData()
+        // Data is loaded via LaunchedEffect in the screen to prevent double-loading
     }
 
     private var isFirstLoad = true

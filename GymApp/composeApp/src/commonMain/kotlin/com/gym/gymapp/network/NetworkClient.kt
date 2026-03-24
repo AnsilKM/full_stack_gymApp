@@ -36,6 +36,12 @@ object NetworkClient {
                 ignoreUnknownKeys = true
             })
         }
+
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60000
+            connectTimeoutMillis = 60000
+            socketTimeoutMillis = 60000
+        }
         
         HttpResponseValidator {
             validateResponse { response ->
