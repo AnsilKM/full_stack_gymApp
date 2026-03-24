@@ -1,4 +1,4 @@
-package com.gym.gymapp
+package com.gym.gymapp.ui.utils
 
 import androidx.compose.runtime.Composable
 
