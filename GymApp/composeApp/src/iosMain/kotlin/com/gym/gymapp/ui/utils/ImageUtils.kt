@@ -9,6 +9,7 @@ actual fun toImageBitmap(byteArray: ByteArray): ImageBitmap {
     return Image.makeFromEncoded(byteArray).toComposeImageBitmap()
 }
 
-actual fun ImageBitmap.toByteArray(): ByteArray {
-    return org.jetbrains.skia.Image.makeFromBitmap(this.asSkiaBitmap()).encodeToData()?.bytes ?: byteArrayOf()
+actual fun ImageBitmap.toByteArray(quality: Int): ByteArray {
+    return org.jetbrains.skia.Image.makeFromBitmap(this.asSkiaBitmap())
+        .encodeToData(org.jetbrains.skia.EncodedImageFormat.JPEG, quality)?.bytes ?: byteArrayOf()
 }

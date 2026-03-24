@@ -27,9 +27,15 @@ class AuthRepository(private val sessionManager: SessionManager) {
                 sessionManager.authToken = loginData.access_token
                 sessionManager.userData = loginData.user
                 
+                // Set gymId from owned gyms or branchGymId
+                val targetGymId = loginData.user?.gyms?.firstOrNull()?.id ?: loginData.user?.branchGymId
+                sessionManager.gymId = targetGymId
+                
                 // Also update runtime client
                 NetworkClient.authToken = loginData.access_token
                 NetworkClient.currentUser = loginData.user
+                NetworkClient.gymId = targetGymId
+
                 
                 Result.success(loginData)
             } else {
@@ -55,9 +61,15 @@ class AuthRepository(private val sessionManager: SessionManager) {
                 sessionManager.authToken = loginData.access_token
                 sessionManager.userData = loginData.user
                 
+                // Set gymId from newly created gym (owners)
+                val targetGymId = loginData.user?.gyms?.firstOrNull()?.id
+                sessionManager.gymId = targetGymId
+                
                 // Also update runtime client
                 NetworkClient.authToken = loginData.access_token
                 NetworkClient.currentUser = loginData.user
+                NetworkClient.gymId = targetGymId
+
                 
                 Result.success(loginData)
             } else {

@@ -12,20 +12,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.gym.gymapp.ui.components.GymBottomBar
 import com.gym.gymapp.ui.components.MainTab
 import com.gym.gymapp.ui.navigation.Screens
-import com.gym.gymapp.ui.screens.attendance.AttendanceScreen
 import com.gym.gymapp.ui.screens.dashboard.DashboardScreen
 import com.gym.gymapp.ui.screens.members.MemberListScreen
 import com.gym.gymapp.ui.screens.profile.ProfileScreen
 import com.gym.gymapp.ui.screens.payments.PaymentsScreen
 import com.gym.gymapp.ui.screens.plans.PlansScreen
-import com.gym.gymapp.ui.screens.announcements.BroadcastScreen
 
 
 import androidx.compose.material.icons.Icons
@@ -33,18 +30,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import com.gym.gymapp.ui.theme.Black
 
-import com.gym.gymapp.ui.theme.Black
-import com.gym.gymapp.AppBackHandler
+import com.gym.gymapp.ui.utils.AppBackHandler
 import com.gym.gymapp.ui.components.NotificationManager
 import com.gym.gymapp.ui.components.AppNotificationType
-import kotlinx.coroutines.delay
 
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gym.gymapp.getPlatform
 
 class MainScreen : Screen {
     @Composable
@@ -60,9 +55,9 @@ class MainScreen : Screen {
             } else if (selectedTab != MainTab.HOME) {
                 selectedTab = MainTab.HOME
             } else {
-                val currentTime = com.gym.gymapp.getPlatform().currentTimeMillis()
+                val currentTime = getPlatform().currentTimeMillis()
                 if (currentTime - lastBackPressTime < 2000) {
-                    com.gym.gymapp.getPlatform().exitApp()
+                    getPlatform().exitApp()
                 } else {
                     lastBackPressTime = currentTime
                     NotificationManager.showNotification("Press again to exit", AppNotificationType.INFO)
@@ -115,7 +110,7 @@ class MainScreen : Screen {
                     MainTab.PLANS -> {
                         PlansScreen(
                             onAddPlan = { navigator.push(Screens.AddPlan()) },
-                            onEditPlan = { navigator.push(Screens.AddPlan()) }
+                            onEditPlan = { plan -> navigator.push(Screens.AddPlan(plan)) }
                         )
                     }
 

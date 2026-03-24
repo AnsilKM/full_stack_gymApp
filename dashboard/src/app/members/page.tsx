@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import { Search, Filter, Plus, MoreVertical, Mail, Phone, Calendar, Trash2, Edit2, ShieldCheck, ShieldAlert, Heart, RefreshCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import QRCode from "react-qr-code";
-import { membersApi, plansApi, gymsApi } from "@/lib/api";
+import { membersApi, plansApi, gymsApi, API_URL } from "@/lib/api";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useNotification } from "@/lib/contexts/NotificationContext";
+
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
+import Loader from "@/components/ui/Loader";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,12 +33,17 @@ interface Member {
 export default function MembersPage() {
   const { showNotification } = useNotification();
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showIdModal, setShowIdModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [memberToToggle, setMemberToToggle] = useState<Member | null>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -68,25 +76,39 @@ export default function MembersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this member?")) {
-      try {
-        await membersApi.delete(id);
-        showNotification("Member deleted successfully", "success");
-        fetchData();
-      } catch (err: any) {
-        showNotification(err.message || "Error deleting member", "error");
-      }
+    setMemberToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!memberToDelete) return;
+    try {
+      await membersApi.delete(memberToDelete);
+      showNotification("Member deleted successfully", "success");
+      fetchData();
+    } catch (err: any) {
+      showNotification(err.message || "Error deleting member", "error");
+    } finally {
+      setMemberToDelete(null);
     }
   };
 
-  const handleToggleStatus = async (member: Member) => {
-    const newStatus = member.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+  const handleToggleStatus = (member: Member) => {
+    setMemberToToggle(member);
+    setIsStatusModalOpen(true);
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!memberToToggle) return;
+    const newStatus = memberToToggle.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     try {
-      await membersApi.update(member.id, { status: newStatus });
+      await membersApi.update(memberToToggle.id, { status: newStatus });
       showNotification(`Status updated to ${newStatus}`, "success");
       fetchData();
     } catch (err: any) {
       showNotification(err.message || "Error updating status", "error");
+    } finally {
+      setMemberToToggle(null);
     }
   };
 
@@ -122,10 +144,19 @@ export default function MembersPage() {
     setShowAddModal(true);
   };
 
-  const filteredMembers = members.filter(m => 
-    m.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredMembers = members.filter(m => {
+    const matchesSearch = m.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         m.user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "ALL" || m.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filterTabs = [
+    { label: "All", value: "ALL" },
+    { label: "Active", value: "ACTIVE" },
+    { label: "Inactive", value: "INACTIVE" },
+    { label: "Expired", value: "EXPIRED" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -143,16 +174,33 @@ export default function MembersPage() {
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
             type="text" 
             placeholder="Search by name, email, or phone..." 
-            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-10 pr-4 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:ring-2 focus:ring-primary/20 transition-all text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+        
+        <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl w-full md:w-auto overflow-x-auto whitespace-nowrap hide-scrollbar">
+          {filterTabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setStatusFilter(tab.value)}
+              className={cn(
+                "px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex-1 md:flex-none",
+                statusFilter === tab.value 
+                  ? "bg-white dark:bg-slate-700 text-primary shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -173,9 +221,7 @@ export default function MembersPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex justify-center">
-                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
+                    <Loader size="md" className="mx-auto" />
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
@@ -194,8 +240,16 @@ export default function MembersPage() {
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold">
-                        {member.user.name.charAt(0)}
+                      <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
+                        {member.photoUrl ? (
+                          <img 
+                            src={member.photoUrl.startsWith('http') ? member.photoUrl : `${API_URL}${member.photoUrl}`} 
+                            alt={member.user.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          member.user.name.charAt(0)
+                        )}
                       </div>
                       <p className="font-semibold text-sm">{member.user.name}</p>
                     </div>
@@ -300,7 +354,7 @@ export default function MembersPage() {
                     <label className="text-xs font-bold text-slate-500 uppercase ml-1">Membership Plan</label>
                     <select required className="input-field" value={formData.planId} onChange={e => setFormData({...formData, planId: e.target.value})}>
                       <option value="">Select a Plan</option>
-                      {plans.map(p => <option key={p.id} value={p.id}>{p.name} - ${p.price}</option>)}
+                      {plans.map(p => <option key={p.id} value={p.id}>{p.name} - ₹{p.price}</option>)}
                     </select>
                   </div>
                    <div className="col-span-2">
@@ -332,7 +386,7 @@ export default function MembersPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl bg-gradient-to-br from-slate-900 to-slate-800"
+              className="relative w-full max-sm rounded-[2rem] overflow-hidden shadow-2xl bg-gradient-to-br from-slate-900 to-slate-800"
             >
               <div className="p-8 pb-32">
                 <p className="text-white/60 text-xs font-bold tracking-widest uppercase mb-1">GYM PASS</p>
@@ -373,6 +427,29 @@ export default function MembersPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Member"
+        message="Are you sure you want to permanently delete this member? This action cannot be reversed and all related data will be lost."
+        confirmText="Delete"
+        type="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        onConfirm={confirmToggleStatus}
+        title={memberToToggle?.status === 'ACTIVE' ? 'Deactivate Member' : 'Activate Member'}
+        message={memberToToggle?.status === 'ACTIVE' 
+          ? `Are you sure you want to deactivate ${memberToToggle?.user.name}? This will restrict their access to the gym.` 
+          : `Activate ${memberToToggle?.user.name}? This will restore their access immediately.`
+        }
+        confirmText={memberToToggle?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+        type={memberToToggle?.status === 'ACTIVE' ? 'danger' : 'info'}
+      />
     </div>
   );
 }

@@ -1,14 +1,11 @@
 package com.gym.gymapp.ui.screens.profile
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 
 import androidx.compose.material3.*
@@ -38,167 +35,152 @@ fun ProfileScreen(
     val navigator = LocalNavigator.currentOrThrow
     var showLogoutSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
 
     val uiState = viewModel.uiState
     val user = uiState.user
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Profile", fontWeight = FontWeight.Black) },
+                actions = {
+                    IconButton(onClick = { showLogoutSheet = true }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Logout",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(padding)
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Profile",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .clickable { showLogoutSheet = true },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = "Logout",
-                        tint = Color(0xFFFF5E5E),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
+            Spacer(Modifier.height(12.dp))
 
-            Spacer(Modifier.height(32.dp))
-
-            // Profile Avatar
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(3.dp)
+            // Profile Header
+            Surface(
+                modifier = Modifier.size(110.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(0.2f))
             ) {
                 ProfileImage(
                     imageUrl = null,
                     name = user?.name ?: "P",
-                    size = 94
+                    size = 110
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
             Text(
                 user?.name ?: "Gym Branch",
-                color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold
             )
 
             Surface(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.padding(top = 4.dp)
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 Text(
                     user?.role ?: "ADMINISTRATOR",
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     color = MaterialTheme.colorScheme.primary,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp
                 )
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(40.dp))
 
-            // Profile Info Cards
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                ProfileInfoCard("Email", user?.email ?: "N/A", Icons.Default.Email)
-                ProfileInfoCard("Phone", user?.phone ?: "Not Registered", Icons.Default.Phone)
-                
-                Spacer(Modifier.height(8.dp))
-                
-                // Management Section
-                Text("Management", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp))
-                
-                ProfileMenuItem("Gym News & Announcements", Icons.Default.Campaign) {
-                    navigator.push(Screens.Broadcast())
-                }
-
-
+            // Sections
+            ProfileSection("ACCOUNT DETAILS") {
+                ProfileDetailBlock(Icons.Default.Email, "Email Address", user?.email ?: "N/A")
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.4f))
+                ProfileDetailBlock(Icons.Default.Phone, "Phone Number", user?.phone ?: "Not registered")
             }
 
+            val userGym = user?.gyms?.firstOrNull()
+            if (userGym != null) {
+                Spacer(Modifier.height(24.dp))
+                ProfileSection("GYM INFORMATION") {
+                    ProfileDetailBlock(Icons.Default.Business, "Gym Name", userGym.name)
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.4f))
+                    ProfileDetailBlock(Icons.Default.LocationOn, "Address", userGym.address)
+                    userGym.phone?.let { 
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.4f))
+                        ProfileDetailBlock(Icons.Default.Call, "Contact Number", it) 
+                    }
+                }
+            }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(24.dp))
+            ProfileSection("MANAGEMENT") {
+                ProfileMenuAction(Icons.Default.Campaign, "News & Announcements") {
+                    navigator.push(Screens.Broadcast())
+                }
+            }
+
+            Spacer(Modifier.height(40.dp))
             
             Text(
-                "Logged in as ${user?.name ?: "Admin"}",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                fontSize = 11.sp,
-                modifier = Modifier.padding(bottom = 12.dp)
+                "Version 1.0.0 • Connected to ${user?.gyms?.firstOrNull()?.name ?: "Central"}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(0.4f)
             )
+            
+            Spacer(Modifier.height(24.dp))
         }
 
         if (showLogoutSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showLogoutSheet = false },
                 sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                dragHandle = { BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .padding(bottom = 40.dp, top = 8.dp),
+                        .padding(bottom = 40.dp, top = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFF5E5E).copy(alpha = 0.1f)),
+                            .size(64.dp)
+                            .background(MaterialTheme.colorScheme.errorContainer.copy(0.1f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ExitToApp,
-                            tint = Color(0xFFFF5E5E),
-                            modifier = Modifier.size(28.dp),
-                            contentDescription = null
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, tint = Color.Red, modifier = Modifier.size(32.dp), contentDescription = null)
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(20.dp))
 
-                    Text("Logout?", color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Black)
-
-                    Spacer(Modifier.height(8.dp))
-
+                    Text("Log out?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(
-                        "You will need your password to log back in.",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        "You will need to re-authenticate to access the gym management dashboard.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        fontSize = 13.sp
+                        modifier = Modifier.padding(top = 8.dp)
                     )
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(32.dp))
 
                     Button(
                         onClick = {
@@ -207,17 +189,17 @@ fun ProfileScreen(
                                 onLogout()
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5E5E)),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Logout", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Log Out", color = Color.White, fontWeight = FontWeight.Bold)
                     }
 
                     Spacer(Modifier.height(12.dp))
 
                     TextButton(onClick = { showLogoutSheet = false }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
                     }
                 }
             }
@@ -226,69 +208,69 @@ fun ProfileScreen(
 }
 
 @Composable
-fun ProfileInfoCard(label: String, value: String, icon: ImageVector) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+fun ProfileSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            title, 
+            style = MaterialTheme.typography.labelMedium, 
+            fontWeight = FontWeight.Bold, 
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp), contentDescription = null)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontWeight = FontWeight.Medium)
-                Text(value, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            }
+            Column(modifier = Modifier.fillMaxWidth(), content = content)
         }
     }
 }
 
 @Composable
-fun ProfileMenuItem(label: String, icon: ImageVector, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .clip(RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+fun ProfileDetailBlock(icon: ImageVector, label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.onSurface.copy(0.05f), RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+        }
+        Spacer(Modifier.width(16.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+fun ProfileMenuAction(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.Transparent
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
+                    modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.onSurface.copy(0.05f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp), contentDescription = null)
+                    Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 }
-                Spacer(Modifier.width(12.dp))
-                Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.width(16.dp))
+                Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                modifier = Modifier.size(20.dp),
-                contentDescription = null
-            )
-
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurface.copy(0.3f))
         }
     }
 }

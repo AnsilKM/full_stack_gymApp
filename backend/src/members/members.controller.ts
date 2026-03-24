@@ -34,8 +34,18 @@ export class MembersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  findAll(@Request() req: any, @Query('gymId') gymId?: string) {
-    return this.membersService.findAll(req.user, gymId);
+  findAll(
+    @Request() req: any, 
+    @Query('gymId') gymId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.membersService.findAll(
+      req.user, 
+      gymId, 
+      page ? parseInt(page) : 1, 
+      limit ? parseInt(limit) : 100
+    );
   }
 
   @Get(':id')

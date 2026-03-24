@@ -27,5 +27,6 @@ data class UpdateMemberRequest(
     val phone: String? = null,
     val bloodGroup: String? = null,
     val photoUrl: String? = null,
-    val status: String? = null
+    val status: String? = null,
+    val planId: String? = null
 )

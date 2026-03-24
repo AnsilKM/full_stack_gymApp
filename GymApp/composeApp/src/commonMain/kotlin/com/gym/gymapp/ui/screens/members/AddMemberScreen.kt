@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
+import kotlinx.coroutines.*
 import org.koin.compose.viewmodel.koinViewModel
 import com.gym.gymapp.ui.viewmodels.AddMemberViewModel
 import androidx.compose.material.icons.filled.CameraAlt
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
 import com.gym.gymapp.ui.components.NotificationManager
+import com.gym.gymapp.ui.components.AppLoader
 import com.gym.gymapp.ui.components.AppNotificationType
 import com.gym.gymapp.ui.utils.toByteArray
 import com.gym.gymapp.ui.utils.toImageBitmap
@@ -54,6 +56,7 @@ fun AddMemberScreen(
     var showPlanMenu by remember { mutableStateOf(false) }
 
     val imageCropper = rememberImageCropper()
+    val scope = rememberCoroutineScope()
     var openImagePicker by remember { mutableStateOf(false) }
     var showPreview by remember { mutableStateOf(false) }
 
@@ -82,7 +85,12 @@ fun AddMemberScreen(
         showGalleryOption = true,
         cropEnable = true,
         selectedImageCallback = { bitmap ->
-            viewModel.onPickedImageChange(bitmap.toByteArray())
+            scope.launch(Dispatchers.Default) {
+                val bytes = bitmap.toByteArray(75)
+                withContext(Dispatchers.Main) {
+                    viewModel.onPickedImageChange(bytes)
+                }
+            }
         },
         selectedImageFileCallback = { }
     )
@@ -194,7 +202,10 @@ fun AddMemberScreen(
                     })
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words
+                )
             )
 
             OutlinedTextField(
@@ -204,7 +215,10 @@ fun AddMemberScreen(
                     Text("Email Address")
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Email
+                )
             )
 
             OutlinedTextField(
@@ -217,16 +231,55 @@ fun AddMemberScreen(
                     })
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(16.dp),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone
+                )
             )
 
-            OutlinedTextField(
-                value = viewModel.uiState.bloodGroup,
-                onValueChange = { viewModel.onBloodGroupChange(it) },
-                label = { Text("Blood Group (O+, AB-, etc.)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
-            )
+            // Blood Group selection dropdown
+            var showBloodGroupMenu by remember { mutableStateOf(false) }
+            val bloodGroups = listOf("A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-")
+            
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = viewModel.uiState.bloodGroup,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Blood Group") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    trailingIcon = {
+                        IconButton(onClick = { showBloodGroupMenu = !showBloodGroupMenu }) {
+                            Icon(
+                                if (showBloodGroupMenu) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                        }
+                    },
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showBloodGroupMenu = true }
+                )
+
+                DropdownMenu(
+                    expanded = showBloodGroupMenu,
+                    onDismissRequest = { showBloodGroupMenu = false },
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                ) {
+                    bloodGroups.forEach { bg ->
+                        DropdownMenuItem(
+                            text = { Text(bg) },
+                            onClick = {
+                                viewModel.onBloodGroupChange(bg)
+                                showBloodGroupMenu = false
+                            }
+                        )
+                    }
+                }
+            }
 
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -290,7 +343,7 @@ fun AddMemberScreen(
                     }
                     viewModel.uiState.availablePlans.forEach { plan ->
                         DropdownMenuItem(
-                            text = { Text("${plan.name} - $${plan.price}") },
+                            text = { Text("${plan.name} - ₹${plan.price.toInt()}") },
                             onClick = {
                                 viewModel.onPlanChange(plan.id)
                                 showPlanMenu = false
@@ -311,67 +364,50 @@ fun AddMemberScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 if (viewModel.uiState.isLoading) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    AppLoader()
                 } else {
                     Text("Register Member", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
             }
         }
 
-        // Image Preview Dialog
+        // Image Preview Full Screen
         if (showPreview && viewModel.uiState.pickedImage != null) {
-            androidx.compose.ui.window.Dialog(
-                onDismissRequest = { showPreview = false }
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(16.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color.Black
+            Box(Modifier.fillMaxSize()) {
+                com.gym.gymapp.ui.components.FullScreenImagePreview(
+                    imageBitmap = com.gym.gymapp.ui.utils.toImageBitmap(viewModel.uiState.pickedImage!!),
+                    onClose = { showPreview = false }
+                )
+                
+                // Add action buttons on top of preview
+                Row(
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        androidx.compose.foundation.Image(
-                            bitmap = com.gym.gymapp.ui.utils.toImageBitmap(viewModel.uiState.pickedImage!!),
-                            contentDescription = "Preview",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
+                    FilledTonalButton(
+                        onClick = {
+                            showPreview = false
+                            openImagePicker = true
+                        },
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color.White.copy(alpha = 0.2f), contentColor = Color.White)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Edit")
+                    }
 
-                        Row(
-                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    showPreview = false
-                                    openImagePicker = true
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Edit",
-                                    tint = Color.White
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    showPreview = false
-                                    viewModel.onPickedImageChange(null)
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Remove",
-                                    tint = Color.White
-                                )
-                            }
-                            IconButton(onClick = { showPreview = false }) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Close",
-                                    tint = Color.White
-                                )
-                            }
-                        }
+                    FilledTonalButton(
+                        onClick = {
+                            showPreview = false
+                            viewModel.onPickedImageChange(null)
+                        },
+                        shape = CircleShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red.copy(alpha = 0.2f), contentColor = Color.Red)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Delete")
                     }
                 }
             }

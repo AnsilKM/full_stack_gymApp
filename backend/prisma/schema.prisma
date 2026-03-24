@@ -6,6 +6,113 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  phone       String?
+  role        Role     @default(GYM)
+  branchGymId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  gyms        Gym[]    @relation("GymOwner")
+  branchGym   Gym?     @relation("GymBranch", fields: [branchGymId], references: [id])
+}
+
+model Gym {
+  id            String           @id @default(cuid())
+  name          String
+  address       String
+  phone         String?
+  ownerId       String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  attendance    Attendance[]
+  owner         User             @relation("GymOwner", fields: [ownerId], references: [id])
+  members       Member[]
+  plans         MembershipPlan[]
+  notifications Notification[]
+  payments      Payment[]
+  branchUsers   User[]           @relation("GymBranch")
+}
+
+model Member {
+  id         String       @id @default(cuid())
+  name       String
+  email      String?
+  phone      String?
+  gymId      String
+  status     MemberStatus @default(ACTIVE)
+  bloodGroup String?
+  photoUrl   String?
+  joinDate   DateTime     @default(now())
+  expiryDate DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  attendance Attendance[]
+  gym        Gym          @relation(fields: [gymId], references: [id])
+  payments   Payment[]
+
+  @@index([gymId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model MembershipPlan {
+  id             String    @id @default(cuid())
+  name           String
+  description    String?
+  price          Float
+  durationMonths Int
+  gymId          String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  gym            Gym       @relation(fields: [gymId], references: [id])
+  payments       Payment[]
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  memberId    String
+  gymId       String
+  date        DateTime @default(now())
+  checkInTime DateTime @default(now())
+  gym         Gym      @relation(fields: [gymId], references: [id])
+  member      Member   @relation(fields: [memberId], references: [id])
+
+  @@index([gymId, date])
+  @@index([memberId])
+}
+
+model Payment {
+  id        String         @id @default(cuid())
+  memberId  String
+  gymId     String
+  amount    Float
+  date      DateTime       @default(now())
+  method    String
+  planId    String
+  createdAt DateTime       @default(now())
+  gym       Gym            @relation(fields: [gymId], references: [id])
+  member    Member         @relation(fields: [memberId], references: [id])
+  plan      MembershipPlan @relation(fields: [planId], references: [id])
+
+  @@index([gymId])
+  @@index([memberId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(ANNOUNCEMENT)
+  gymId     String
+  createdAt DateTime         @default(now())
+  gym       Gym              @relation(fields: [gymId], references: [id])
+}
+
 enum Role {
   ADMIN
   GYM
@@ -20,100 +127,4 @@ enum MemberStatus {
 enum NotificationType {
   ANNOUNCEMENT
   REMINDER
-}
-
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  phone     String?
-  role      Role     @default(GYM)
-  gyms      Gym[]    @relation("GymOwner")
-  branchGym Gym?     @relation("GymBranch", fields: [branchGymId], references: [id])
-  branchGymId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Gym {
-  id              String           @id @default(cuid())
-  name            String
-  address         String
-  phone           String?
-  owner           User             @relation("GymOwner", fields: [ownerId], references: [id])
-  ownerId         String
-  members         Member[]
-  plans           MembershipPlan[]
-  attendance      Attendance[]
-  notifications   Notification[]
-  payments        Payment[]
-  branchUsers     User[]           @relation("GymBranch")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-model Member {
-  id             String         @id @default(cuid())
-  name           String
-  email          String?
-  phone          String?
-  gym            Gym            @relation(fields: [gymId], references: [id])
-  gymId          String
-  status         MemberStatus   @default(ACTIVE)
-  bloodGroup     String?
-  photoUrl       String?
-  joinDate       DateTime       @default(now())
-  expiryDate     DateTime?
-  attendance     Attendance[]
-  payments       Payment[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-}
-
-model MembershipPlan {
-  id             String    @id @default(cuid())
-  name           String
-  description    String?
-  price          Float
-  durationMonths Int
-  gym            Gym       @relation(fields: [gymId], references: [id])
-  gymId          String
-  payments       Payment[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-}
-
-model Attendance {
-  id          String   @id @default(cuid())
-  member      Member   @relation(fields: [memberId], references: [id])
-  memberId    String
-  gym         Gym      @relation(fields: [gymId], references: [id])
-  gymId       String
-  date        DateTime @default(now())
-  checkInTime DateTime @default(now())
-}
-
-model Payment {
-  id        String         @id @default(cuid())
-  member    Member         @relation(fields: [memberId], references: [id])
-  memberId  String
-  gym       Gym            @relation(fields: [gymId], references: [id])
-  gymId     String
-  amount    Float
-  date      DateTime       @default(now())
-  method    String
-  plan      MembershipPlan @relation(fields: [planId], references: [id])
-  planId    String
-  createdAt DateTime       @default(now())
-}
-
-model Notification {
-  id        String           @id @default(cuid())
-  title     String
-  message   String
-  type      NotificationType @default(ANNOUNCEMENT)
-  gym       Gym              @relation(fields: [gymId], references: [id])
-  gymId     String
-  createdAt DateTime         @default(now())
 }

@@ -4,7 +4,6 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.gym.gymapp.network.NetworkClient
 import com.gym.gymapp.ui.utils.AppBackHandler
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -30,6 +30,14 @@ fun FullScreenImagePreview(
     imageBitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
     onClose: () -> Unit
 ) {
+    val fullUrl = remember(imageUrl) {
+        if (imageUrl != null && !imageUrl.startsWith("http")) {
+            "${NetworkClient.BASE_URL}${if (imageUrl.startsWith("/")) "" else "/"}$imageUrl"
+        } else {
+            imageUrl
+        }
+    }
+
     // Handle physical back button
     AppBackHandler { onClose() }
 
@@ -40,7 +48,7 @@ fun FullScreenImagePreview(
     // Animation for dismissing by swiping
     val swipeOffset = remember { Animatable(0f) }
     val backgroundAlpha by animateFloatAsState(
-        targetValue = if (Math.abs(swipeOffset.value) > 200f) 0f else 1f,
+        targetValue = if (kotlin.math.abs(swipeOffset.value) > 200f) 0.5f else 1f,
         animationSpec = tween(300)
     )
 
@@ -53,14 +61,13 @@ fun FullScreenImagePreview(
                     onDoubleTap = {
                         scale = if (scale > 1f) 1f else 2.5f
                         if (scale == 1f) offset = androidx.compose.ui.geometry.Offset.Zero
-                    },
-                    onTap = { /* Just eat the tap to prevent clicks under it */ }
+                    }
                 )
             }
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragEnd = {
-                        if (scale == 1f && Math.abs(swipeOffset.value) > 300f) {
+                        if (scale == 1f && kotlin.math.abs(swipeOffset.value) > 300f) {
                             onClose()
                         } else {
                             scope.launch { swipeOffset.animateTo(0f) }
@@ -75,13 +82,10 @@ fun FullScreenImagePreview(
                 )
             }
             .pointerInput(Unit) {
-                    // Only allow pan when zoomed in, or allow vertical swipe to dismiss
+                detectTransformGestures { _, pan, zoom, _ ->
                     scale = (scale * zoom).coerceIn(1f, 5f)
-                    
                     if (scale > 1f) {
                         offset += pan
-                    } else {
-                        // Drag to dismiss logic could go here, but using draggable is better
                     }
                 }
             }
@@ -106,7 +110,7 @@ fun FullScreenImagePreview(
             )
         } else {
             AsyncImage(
-                model = imageUrl,
+                model = fullUrl,
                 contentDescription = "Full Screen Preview",
                 modifier = imageModifier,
                 contentScale = ContentScale.Fit

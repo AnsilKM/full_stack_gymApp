@@ -8,25 +8,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gym.gymapp.ui.components.AppNotificationType
+import com.gym.gymapp.ui.components.AppLoader
 import com.gym.gymapp.ui.components.NotificationManager
 import com.gym.gymapp.ui.viewmodels.BroadcastViewModel
-import com.gym.gymapp.data.models.BroadcastLog
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -108,7 +102,7 @@ fun BroadcastScreen(onBack: () -> Unit, viewModel: BroadcastViewModel = koinView
                         enabled = !uiState.isSending && uiState.message.isNotBlank()
                     ) {
                         if (uiState.isSending) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            AppLoader()
                         } else {
                             Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
@@ -122,9 +116,7 @@ fun BroadcastScreen(onBack: () -> Unit, viewModel: BroadcastViewModel = koinView
             Text("Previous Broadcasts", fontWeight = FontWeight.Black, fontSize = 16.sp, modifier = Modifier.padding(bottom = 12.dp))
 
             if (uiState.isLoading && uiState.logs.isEmpty()) {
-                Box(Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                AppLoader(isFullPage = true)
             } else if (uiState.logs.isEmpty()) {
                 Text("No past broadcasts found.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
             } else {

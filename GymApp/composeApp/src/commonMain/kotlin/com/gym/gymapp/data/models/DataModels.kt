@@ -29,10 +29,16 @@ data class Member(
     val bloodGroup: String? = null,
     val photoUrl: String? = null,
     val gym: Gym? = null,
-    val createdAt: String
+    val joinDate: String? = null,
+    val expiryDate: String? = null,
+    val createdAt: String,
+    val isExpired: Boolean? = null,
+    val joiningDateDisplay: String? = null,
+    val expiryDateDisplay: String? = null
 )
 
 @Serializable
+
 data class MembershipPlan(
     val id: String,
     val name: String,

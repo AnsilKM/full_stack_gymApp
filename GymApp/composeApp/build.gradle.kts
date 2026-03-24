@@ -32,8 +32,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.navigation.compose)
-            implementation(libs.coil.compose)
             implementation(libs.koin.android)
+            implementation(libs.androidx.multidex)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -67,7 +67,13 @@ kotlin {
             
             // Settings
             implementation(libs.multiplatform.settings)
+            implementation(libs.kotlinx.datetime)
+
+            // Image Loading
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
@@ -84,6 +90,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
     }
     packaging {
         resources {
@@ -104,4 +111,3 @@ android {
 dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
-

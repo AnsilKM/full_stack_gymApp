@@ -30,16 +30,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.MaterialTheme
 
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Assignment
-import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.automirrored.filled.Assignment
 
 enum class MainTab(val icon: ImageVector, val label: String) {
     HOME(Icons.Default.Home, "Home"),
     MEMBERS(Icons.AutoMirrored.Filled.List, "Members"),
     PAYMENTS(Icons.Default.Payments, "Pay"),
-    PLANS(Icons.Default.Assignment, "Plans"),
+    PLANS(Icons.AutoMirrored.Filled.Assignment, "Plans"),
     PROFILE(Icons.Default.Person, "Profile")
 }
+
 
 @Composable
 fun GymBottomBar(

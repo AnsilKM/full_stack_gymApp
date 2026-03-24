@@ -12,12 +12,14 @@ import io.ktor.http.content.*
 class MemberRepository {
     private val client = NetworkClient.client
     
-    suspend fun getMembers(gymId: String? = null): Result<List<Member>> {
+    suspend fun getMembers(gymId: String? = null, page: Int = 1, limit: Int = 50): Result<List<Member>> {
         return try {
             val response: ApiResponse<List<Member>> = client.get(ApiEndpoints.MEMBERS) {
                 if (gymId != null) {
                     parameter("gymId", gymId)
                 }
+                parameter("page", page)
+                parameter("limit", limit)
             }.body()
             Result.success(response.data)
         } catch (e: Exception) {

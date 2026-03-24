@@ -17,6 +17,8 @@ import kotlin.time.TimeSource
 object NetworkClient {
     var authToken: String? = null
     var currentUser: com.gym.gymapp.data.models.UserDto? = null
+    var gymId: String? = null
+
 
     // Event flow for global auth events (like session expiry)
     private val _authEvents = MutableSharedFlow<AuthEvent>(extraBufferCapacity = 1)
@@ -100,8 +102,12 @@ object NetworkClient {
             authToken?.let {
                 header("Authorization", "Bearer $it")
             }
+            gymId?.let {
+                header("x-gym-id", it)
+            }
         }
     }
+
 
     val BASE_URL = getPlatform().baseUrl
 }

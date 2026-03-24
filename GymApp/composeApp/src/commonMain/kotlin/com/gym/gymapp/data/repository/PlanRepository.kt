@@ -40,5 +40,10 @@ class PlanRepository {
         }
         return response.status == HttpStatusCode.OK
     }
-}
 
+    suspend fun deletePlan(planId: String): Boolean {
+        if (planId.isBlank()) return false
+        val response = client.delete("/plans/$planId")
+        return response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NoContent
+    }
+}

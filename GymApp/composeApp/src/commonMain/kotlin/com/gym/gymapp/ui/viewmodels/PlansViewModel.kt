@@ -15,7 +15,7 @@ data class PlansUiState(
     val plans: List<MembershipPlan> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val editingPlanId: String? = null, // New field
+    val editingPlanId: String? = null,
     val addSuccess: Boolean = false,
     
     // New/Edit Plan Form
@@ -110,8 +110,18 @@ class PlansViewModel(
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             val gymId = ensureGymId()
             if (gymId != null) {
+                val planId = if (isEditMode) {
+                    uiState.editingPlanId!!
+                } else {
+                    // Generate slug from name for brand new plans
+                    name.lowercase().trim()
+                        .replace(Regex("[^a-z0-9]"), "-")
+                        .replace(Regex("-+"), "-")
+                        .trim('-')
+                }
+
                 val plan = MembershipPlan(
-                    id = uiState.editingPlanId ?: "",
+                    id = planId,
                     name = name,
                     description = uiState.newPlanDescription,
                     price = price,
@@ -128,8 +138,7 @@ class PlansViewModel(
                     if (success) {
                         uiState = uiState.copy(
                             isLoading = false, 
-                            addSuccess = true, 
-                            editingPlanId = null,
+                            addSuccess = true,
                             newPlanName = "",
                             newPlanDescription = "",
                             newPlanPrice = "",
@@ -146,7 +155,30 @@ class PlansViewModel(
         }
     }
 
+    fun deletePlan(planId: String) {
+        if (planId.isBlank()) return
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true, errorMessage = null)
+            try {
+                val success = repository.deletePlan(planId)
+                if (success) {
+                    uiState = uiState.copy(isLoading = false)
+                    loadPlans()
+                } else {
+                    uiState = uiState.copy(isLoading = false, errorMessage = "Failed to delete plan")
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(isLoading = false, errorMessage = "Error: ${e.message}")
+            }
+        }
+    }
 
-    fun resetAddSuccess() { uiState = uiState.copy(addSuccess = false) }
+
+    fun resetAddSuccess() { 
+        uiState = uiState.copy(
+            addSuccess = false,
+            editingPlanId = null 
+        ) 
+    }
     fun clearError() { uiState = uiState.copy(errorMessage = null) }
 }

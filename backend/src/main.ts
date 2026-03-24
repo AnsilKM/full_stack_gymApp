@@ -12,8 +12,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
   
-  // Ensure uploads directory exists
-  const uploadDir = join(__dirname, '..', 'uploads');
+  // Ensure uploads directory exists relative to current working directory
+  const uploadDir = join(process.cwd(), 'uploads');
   if (!existsSync(uploadDir)) {
     mkdirSync(uploadDir);
   }

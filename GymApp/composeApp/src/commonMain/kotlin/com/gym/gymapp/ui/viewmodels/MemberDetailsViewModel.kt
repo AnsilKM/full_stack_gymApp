@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gym.gymapp.data.models.Member
 import com.gym.gymapp.data.models.UpdateMemberRequest
+import com.gym.gymapp.data.models.MembershipPlan
 import com.gym.gymapp.data.repository.MemberRepository
+import com.gym.gymapp.data.repository.GymRepository
 import kotlinx.coroutines.launch
 
 data class MemberDetailsUIState(
@@ -17,16 +19,65 @@ data class MemberDetailsUIState(
     val errorMessage: String? = null,
     val updateSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
+    val isRenewing: Boolean = false,
     // Fields for editing
     val editName: String = "",
     val editEmail: String = "",
     val editPhone: String = "",
     val editBloodGroup: String = "",
-    val editStatus: String = ""
-)
+    val editStatus: String = "",
+    val editPlanId: String? = null,
+    val availablePlans: List<MembershipPlan> = emptyList(),
+    val pickedImage: ByteArray? = null
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+        other as MemberDetailsUIState
+        if (member != other.member) return false
+        if (isEditing != other.isEditing) return false
+        if (isLoading != other.isLoading) return false
+        if (errorMessage != other.errorMessage) return false
+        if (updateSuccess != other.updateSuccess) return false
+        if (deleteSuccess != other.deleteSuccess) return false
+        if (isRenewing != other.isRenewing) return false
+        if (editName != other.editName) return false
+        if (editEmail != other.editEmail) return false
+        if (editPhone != other.editPhone) return false
+        if (editBloodGroup != other.editBloodGroup) return false
+        if (editStatus != other.editStatus) return false
+        if (editPlanId != other.editPlanId) return false
+        if (availablePlans != other.availablePlans) return false
+        if (pickedImage != null) {
+            if (other.pickedImage == null) return false
+            if (!pickedImage.contentEquals(other.pickedImage)) return false
+        } else if (other.pickedImage != null) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = member?.hashCode() ?: 0
+        result = 31 * result + isEditing.hashCode()
+        result = 31 * result + isLoading.hashCode()
+        result = 31 * result + (errorMessage?.hashCode() ?: 0)
+        result = 31 * result + updateSuccess.hashCode()
+        result = 31 * result + deleteSuccess.hashCode()
+        result = 31 * result + isRenewing.hashCode()
+        result = 31 * result + editName.hashCode()
+        result = 31 * result + editEmail.hashCode()
+        result = 31 * result + editPhone.hashCode()
+        result = 31 * result + editBloodGroup.hashCode()
+        result = 31 * result + editStatus.hashCode()
+        result = 31 * result + (editPlanId?.hashCode() ?: 0)
+        result = 31 * result + availablePlans.hashCode()
+        result = 31 * result + (pickedImage?.contentHashCode() ?: 0)
+        return result
+    }
+}
 
 class MemberDetailsViewModel(
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
+    private val gymRepository: GymRepository
 ) : ViewModel() {
     var uiState by mutableStateOf(MemberDetailsUIState())
         private set
@@ -46,8 +97,10 @@ class MemberDetailsViewModel(
                     editPhone = member.phone ?: "",
                     editBloodGroup = member.bloodGroup ?: "",
                     editStatus = member.status,
+                    editPlanId = null,
                     errorMessage = null
                 )
+                loadPlansForGym(member.gymId)
             } else {
                 uiState = uiState.copy(isLoading = false, errorMessage = "Member not found")
                 println("APP_LOG: Member not found handling ID: $memberId")
@@ -55,15 +108,35 @@ class MemberDetailsViewModel(
         }
     }
 
+    private fun loadPlansForGym(gymId: String) {
+        viewModelScope.launch {
+            val result = gymRepository.getMembershipPlans(gymId)
+            result.onSuccess { plans ->
+                uiState = uiState.copy(availablePlans = plans)
+            }
+        }
+    }
+
     fun toggleEdit() {
-        uiState = uiState.copy(isEditing = !uiState.isEditing)
+        uiState = uiState.copy(isEditing = !uiState.isEditing, isRenewing = false)
+    }
+
+    fun startRenewing() {
+        uiState = uiState.copy(isEditing = true, isRenewing = true, editStatus = "ACTIVE")
     }
 
     fun onEditNameChange(newValue: String) { uiState = uiState.copy(editName = newValue) }
     fun onEditEmailChange(newValue: String) { uiState = uiState.copy(editEmail = newValue) }
-    fun onEditPhoneChange(newValue: String) { uiState = uiState.copy(editPhone = newValue) }
+    fun onEditPhoneChange(newValue: String) {
+        val digitsOnly = newValue.filter { it.isDigit() }
+        if (digitsOnly.length <= 10) {
+            uiState = uiState.copy(editPhone = digitsOnly)
+        }
+    }
     fun onEditBloodGroupChange(newValue: String) { uiState = uiState.copy(editBloodGroup = newValue) }
     fun onEditStatusChange(newValue: String) { uiState = uiState.copy(editStatus = newValue) }
+    fun onEditPlanChange(newValue: String) { uiState = uiState.copy(editPlanId = newValue) }
+    fun onPickedImageChange(newValue: ByteArray?) { uiState = uiState.copy(pickedImage = newValue) }
 
     fun updateMember() {
         val memberId = uiState.member?.id ?: return
@@ -71,12 +144,27 @@ class MemberDetailsViewModel(
         uiState = uiState.copy(isLoading = true, errorMessage = null)
         
         viewModelScope.launch {
+            var updatedPhotoUrl: String? = uiState.member?.photoUrl
+
+            // 1. Upload new image if picked
+            uiState.pickedImage?.let { bytes ->
+                val uploadResult = memberRepository.uploadImage(bytes)
+                uploadResult.onSuccess { url ->
+                    updatedPhotoUrl = url
+                }.onFailure {
+                    uiState = uiState.copy(isLoading = false, errorMessage = "Image upload failed: ${it.message}")
+                    return@launch
+                }
+            }
+
             val request = UpdateMemberRequest(
                 name = uiState.editName,
                 email = uiState.editEmail,
                 phone = uiState.editPhone,
                 bloodGroup = uiState.editBloodGroup,
-                status = uiState.editStatus
+                status = uiState.editStatus,
+                photoUrl = updatedPhotoUrl,
+                planId = uiState.editPlanId
             )
             
             val result = memberRepository.updateMember(memberId, request)

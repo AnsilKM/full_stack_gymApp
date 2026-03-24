@@ -98,7 +98,12 @@ class AddMemberViewModel(
 
     fun onNameChange(newValue: String) { uiState = uiState.copy(name = newValue) }
     fun onEmailChange(newValue: String) { uiState = uiState.copy(email = newValue) }
-    fun onPhoneChange(newValue: String) { uiState = uiState.copy(phone = newValue) }
+    fun onPhoneChange(newValue: String) {
+        val digitsOnly = newValue.filter { it.isDigit() }
+        if (digitsOnly.length <= 10) {
+            uiState = uiState.copy(phone = digitsOnly)
+        }
+    }
     fun onBloodGroupChange(newValue: String) { uiState = uiState.copy(bloodGroup = newValue) }
     fun onPickedImageChange(newValue: ByteArray?) { uiState = uiState.copy(pickedImage = newValue) }
     fun onPlanChange(newValue: String) { uiState = uiState.copy(selectedPlanId = newValue) }

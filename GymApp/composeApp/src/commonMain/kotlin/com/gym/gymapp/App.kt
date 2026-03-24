@@ -18,9 +18,36 @@ import kotlinx.coroutines.flow.collectLatest
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
+import coil3.network.ktor3.KtorNetworkFetcherFactory
+import okio.FileSystem
+import okio.Path.Companion.toPath
+
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import okio.Path.Companion.toPath
 
 @Composable
 fun App() {
+    setSingletonImageLoaderFactory { context ->
+        val platform = getPlatform()
+        ImageLoader.Builder(context)
+            .components {
+                add(KtorNetworkFetcherFactory())
+            }
+            .diskCache {
+                platform.cacheDir?.let {
+                    DiskCache.Builder()
+                        .directory(it.toPath().resolve("image_cache"))
+                        .maxSizeBytes(1024L * 1024 * 100) // 100MB
+                        .build()
+                }
+            }
+            .logger(coil3.util.DebugLogger())
+            .build()
+    }
+
     GymAppTheme {
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             Navigator(Screens.Splash()) { navigator ->

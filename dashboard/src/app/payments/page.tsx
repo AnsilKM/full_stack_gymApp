@@ -61,7 +61,7 @@ export default function PaymentsPage() {
             <h3 className="text-slate-500 text-sm font-medium">Total Revenue</h3>
             <ArrowUpRight className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-3xl font-bold">${stats.totalRevenue.toLocaleString()}.00</p>
+          <p className="text-3xl font-bold">₹{stats.totalRevenue.toLocaleString()}.00</p>
           <p className="text-xs text-emerald-500 mt-2 font-medium">+--% <span className="text-slate-400 font-normal">from last month</span></p>
         </div>
         <div className="card">
@@ -69,7 +69,7 @@ export default function PaymentsPage() {
             <h3 className="text-slate-500 text-sm font-medium">Pending Payments</h3>
             <Activity className="w-4 h-4 text-amber-500" />
           </div>
-          <p className="text-3xl font-bold">$0.00</p>
+          <p className="text-3xl font-bold">₹0.00</p>
           <p className="text-xs text-slate-400 mt-2 font-normal">No pending payments</p>
         </div>
         <div className="card">
@@ -117,7 +117,7 @@ export default function PaymentsPage() {
               >
                 <td className="px-6 py-4 font-semibold text-sm">{p.member.user.name}</td>
                 <td className="px-6 py-4 text-xs text-slate-500">{p.plan.name}</td>
-                <td className="px-6 py-4 font-bold text-sm">${p.amount}</td>
+                <td className="px-6 py-4 font-bold text-sm">₹{p.amount}</td>
                 <td className="px-6 py-4 text-xs text-slate-400">{new Date(p.date).toLocaleDateString()}</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-500">

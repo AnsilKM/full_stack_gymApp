@@ -17,16 +17,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gym.gymapp.getPlatform
-import kotlinx.datetime.*
-
 
 @Composable
 fun MemberItem(
     name: String, 
     status: String, 
+    isActuallyExpired: Boolean,
     joinDate: String, 
     expiryDate: String, 
     phone: String?, 
+    imageUrl: String?,
     onClick: () -> Unit
 ) {
     Card(
@@ -39,7 +39,7 @@ fun MemberItem(
             verticalAlignment = Alignment.Top
         ) {
             ProfileImage(
-                imageUrl = null,
+                imageUrl = imageUrl,
                 name = name,
                 size = 44
             )
@@ -47,6 +47,8 @@ fun MemberItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                val displayStatus = if (isActuallyExpired) "EXPIRED" else status
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -55,13 +57,15 @@ fun MemberItem(
                     Text(name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                     
                     Surface(
-                        color = if (status == "ACTIVE") MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Red.copy(alpha = 0.1f),
+                        color = if (isActuallyExpired) Color.Red.copy(alpha = 0.1f) 
+                               else if (status == "ACTIVE") MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) 
+                               else Color.Red.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(
-                            status,
+                            displayStatus,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = if (status == "ACTIVE") MaterialTheme.colorScheme.primary else Color.Red,
+                            color = if (isActuallyExpired || status != "ACTIVE") Color.Red else MaterialTheme.colorScheme.primary,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Black
                         )
@@ -89,13 +93,8 @@ fun MemberItem(
                     }
 
                     // Expiry Date
-                    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                    val expDate = try { LocalDate.parse(expiryDate) } catch (e: Exception) { today }
-                    val daysLeft = today.daysUntil(expDate)
-                    
                     val expiryColor = when {
-                        daysLeft < 0 -> Color.Red
-                        daysLeft <= 5 -> Color(0xFFFFA500) // Orange
+                        isActuallyExpired -> Color.Red
                         else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                     }
 
@@ -129,8 +128,8 @@ fun MemberItem(
                             modifier = Modifier.height(30.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF25D366).copy(alpha = 0.1f),
-                                contentColor = Color(0xFF25D366)
+                                containerColor = Color(0xFF059669).copy(alpha = 0.12f), // Emerald Green
+                                contentColor = Color(0xFF059669)
                             ),
                             shape = RoundedCornerShape(8.dp),
                             elevation = null
@@ -148,8 +147,8 @@ fun MemberItem(
                             modifier = Modifier.height(30.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                contentColor = MaterialTheme.colorScheme.primary
+                                containerColor = Color(0xFF4F46E5).copy(alpha = 0.12f), // Indigo
+                                contentColor = Color(0xFF4F46E5)
                             ),
                             shape = RoundedCornerShape(8.dp),
                             elevation = null

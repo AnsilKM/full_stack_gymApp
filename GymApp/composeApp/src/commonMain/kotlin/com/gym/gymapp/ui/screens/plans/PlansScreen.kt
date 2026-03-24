@@ -1,5 +1,6 @@
 package com.gym.gymapp.ui.screens.plans
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,7 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 import com.gym.gymapp.ui.viewmodels.PlansViewModel
+import com.gym.gymapp.ui.components.*
 import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @Composable
 fun PlansScreen(
@@ -37,6 +45,21 @@ fun PlansScreen(
         viewModel.loadPlans()
     }
 
+    var planToDelete by remember { mutableStateOf<com.gym.gymapp.data.models.MembershipPlan?>(null) }
+
+    if (planToDelete != null) {
+        ActionConfirmationDialog(
+            onDismissRequest = { planToDelete = null },
+            onConfirm = { planToDelete?.id?.let { viewModel.deletePlan(it) } },
+            title = "Delete Plan?",
+            message = "Are you sure you want to delete the '${planToDelete?.name}' plan? This may affect members currently on this plan.",
+            confirmText = "Delete",
+            confirmColor = Color(0xFFEF4444),
+            icon = Icons.Default.DeleteForever,
+            iconColor = Color(0xFFEF4444)
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,6 +67,7 @@ fun PlansScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
+        Spacer(Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -58,9 +82,7 @@ fun PlansScreen(
 
 
         if (uiState.isLoading && uiState.plans.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            AppLoader(isFullPage = true)
         } else if (uiState.plans.isEmpty()) {
             Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                 Text("No plans added yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
@@ -74,8 +96,10 @@ fun PlansScreen(
                     features = plan.description?.split(",") ?: listOf("Gym Access"),
                     color = MaterialTheme.colorScheme.surface,
                     onEdit = { 
-                        viewModel.initEdit(plan)
                         onEditPlan(plan)
+                    },
+                    onDelete = {
+                        planToDelete = plan
                     }
                 )
                 Spacer(Modifier.height(16.dp))
@@ -87,56 +111,78 @@ fun PlansScreen(
 
 
 @Composable
-fun PlanCard(name: String, price: String, duration: String, features: List<String>, color: Color, onEdit: () -> Unit, isPopular: Boolean = false) {
+fun PlanCard(name: String, price: String, duration: String, features: List<String>, color: Color, onEdit: () -> Unit, onDelete: () -> Unit, isPopular: Boolean = false) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     ) {
-        Column(Modifier.padding(20.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Column {
-                    if (isPopular) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        ) {
-                            Text(
-                                "POPULAR",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                        }
-                    }
-                    Text(name, fontSize = 18.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-                    Text(duration, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+        Column(Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(duration, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
-                Text(price, fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+                
+                Text(price, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            features.forEach { feature ->
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
+                    Icon(
+                        Icons.Default.CheckCircle, 
+                        contentDescription = null, 
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), 
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        feature.trim(), 
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            features.forEach { feature ->
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(feature, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            OutlinedButton(
-                onClick = onEdit,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                TextButton(
+                    onClick = onEdit,
+                    modifier = Modifier.height(36.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp)
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                
                 Spacer(Modifier.width(8.dp))
-                Text("Edit Plan Perks", fontSize = 12.sp)
+
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f), shape = RoundedCornerShape(10.dp))
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }

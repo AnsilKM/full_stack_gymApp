@@ -78,17 +78,21 @@ fun ActionConfirmationDialog(
                         onClick = onDismissRequest,
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp),
+                            .defaultMinSize(minHeight = 50.dp),
                         shape = RoundedCornerShape(14.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         Text(
                             text = dismissText,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center,
+                            fontSize = 13.sp,
+                            maxLines = 1
                         )
                     }
-
+ 
                     Button(
                         onClick = {
                             onConfirm()
@@ -96,15 +100,19 @@ fun ActionConfirmationDialog(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp),
+                            .defaultMinSize(minHeight = 50.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = confirmColor),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         Text(
                             text = confirmText,
                             fontWeight = FontWeight.Black,
-                            color = Color.White
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            fontSize = 13.sp,
+                            maxLines = 1
                         )
                     }
                 }

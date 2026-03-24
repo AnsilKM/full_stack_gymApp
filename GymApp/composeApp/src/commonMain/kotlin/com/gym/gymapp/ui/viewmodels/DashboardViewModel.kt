@@ -35,13 +35,18 @@ class DashboardViewModel(
         loadDashboardData()
     }
 
+    private var isFirstLoad = true
+
     fun loadDashboardData() {
         println("APP_LOG: Fetching dashboard data")
-        uiState = uiState.copy(isLoading = true)
+        if (isFirstLoad) {
+            uiState = uiState.copy(isLoading = true)
+        }
         viewModelScope.launch {
             val gymsResult = repository.getGyms()
             gymsResult.onSuccess { gyms ->
                 if (gyms.isNotEmpty()) {
+                    isFirstLoad = false
                     val gym = gyms[0]
                     
                     val statsResult = repository.getDashboardStats(gym.id)

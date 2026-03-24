@@ -32,6 +32,7 @@ fun PaymentsScreen() {
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
+        Spacer(Modifier.height(20.dp))
         Text(
             "Revenue & Payments",
             style = MaterialTheme.typography.headlineSmall,
