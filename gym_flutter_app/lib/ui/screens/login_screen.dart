@@ -58,14 +58,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              if (authState.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    authState.errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(

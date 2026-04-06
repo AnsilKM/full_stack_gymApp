@@ -5,6 +5,8 @@ import '../widgets/member_item.dart';
 import '../../logic/providers/dashboard_provider.dart';
 import 'member_list_screen.dart';
 import 'member_profile_screen.dart';
+import 'attendance_screen.dart';
+import 'add_member_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -50,24 +52,32 @@ class _MobileLayout extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    uiState.gymName.isEmpty ? "Gym Dashboard" : uiState.gymName,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: theme.colorScheme.onSurface,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      uiState.gymName.isEmpty ? "Gym Dashboard" : uiState.gymName,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Text(
-                    "Main Branch Overview",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.w500,
+                    Text(
+                      "Main Branch Overview",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Image.asset(
+                'assets/icon.png',
+                height: 42,
               ),
             ],
           ),
@@ -110,6 +120,46 @@ class _MobileLayout extends StatelessWidget {
               value: uiState.monthlyGrowth,
               icon: Icons.trending_up,
               accentColor: theme.colorScheme.onSurface,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "Quick Actions",
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _ActionButton(
+                    label: "Add Member",
+                    icon: Icons.add,
+                    isPrimary: true,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddMemberScreen()),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ActionButton(
+                    label: "Attendance",
+                    icon: Icons.checklist,
+                    isPrimary: false,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AttendanceScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             Row(
@@ -247,7 +297,12 @@ class _TabletLayout extends StatelessWidget {
                         label: "Add Member",
                         icon: Icons.add,
                         isPrimary: true,
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AddMemberScreen()),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -256,7 +311,12 @@ class _TabletLayout extends StatelessWidget {
                         label: "Attendance",
                         icon: Icons.checklist,
                         isPrimary: false,
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AttendanceScreen()),
+                          );
+                        },
                       ),
                     ),
                   ],

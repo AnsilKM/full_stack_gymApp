@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/api_response.dart';
 import 'api_client.dart';
 
 final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {

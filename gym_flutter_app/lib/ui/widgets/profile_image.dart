@@ -45,14 +45,11 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          fontSize: size * 0.4,
-        ),
+    return Container(
+      padding: EdgeInsets.all(size * 0.2),
+      child: Image.asset(
+        'assets/icon.png',
+        fit: BoxFit.contain,
       ),
     );
   }

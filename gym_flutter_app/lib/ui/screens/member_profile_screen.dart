@@ -236,6 +236,41 @@ class _MembershipSection extends StatelessWidget {
                 _InfoColumn(label: "Expiry Date", value: member.expiryDateDisplay),
               ],
             ),
+            const SizedBox(height: 20),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: member.progress,
+                backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                minHeight: 8,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("${(member.progress * 100).toInt()}% Complete", style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5))),
+                Text(member.isExpired ? "Expired" : "Active", style: theme.textTheme.labelSmall?.copyWith(color: member.isExpired ? Colors.red : Colors.green, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Show Renewal Sheet
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text("RENEW MEMBERSHIP", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
           ],
         ),
       ),

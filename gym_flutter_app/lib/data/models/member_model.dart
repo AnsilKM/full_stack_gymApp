@@ -29,6 +29,18 @@ class Member {
   String get joiningDateDisplay => DateFormat('dd MMM yyyy').format(joinDate);
   String get expiryDateDisplay => DateFormat('dd MMM yyyy').format(expiryDate);
 
+  double get progress {
+    final now = DateTime.now();
+    if (now.isBefore(joinDate)) return 0.0;
+    if (now.isAfter(expiryDate)) return 1.0;
+    
+    final total = expiryDate.difference(joinDate).inSeconds;
+    if (total <= 0) return 1.0;
+    
+    final elapsed = now.difference(joinDate).inSeconds;
+    return (elapsed / total).clamp(0.0, 1.0);
+  }
+
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
       id: json['id'],

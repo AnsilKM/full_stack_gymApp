@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/api_response.dart';
 import '../models/member_model.dart';
 import 'api_client.dart';
 
@@ -11,6 +12,27 @@ final memberRepositoryProvider = Provider<MemberRepository>((ref) {
 class MemberRepository {
   final Dio _dio;
   MemberRepository(this._dio);
+
+  Future<ApiResponse<Member>> createMember(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/members', data: data);
+      return ApiResponse.fromJson(response.data, (data) => Member.fromJson(data));
+    } catch (e) {
+      return ApiResponse(status: false, message: e.toString());
+    }
+  }
+
+  Future<ApiResponse<String>> uploadImage(List<int> imageBytes) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(imageBytes, filename: 'profile.jpg'),
+      });
+      final response = await _dio.post('/members/upload', data: formData);
+      return ApiResponse.fromJson(response.data, (data) => (data as Map)['url'] ?? '');
+    } catch (e) {
+      return ApiResponse(status: false, message: e.toString());
+    }
+  }
 
   Future<ApiResponse<List<Member>>> getMembers({required String gymId, int page = 1, int limit = 50}) async {
     try {

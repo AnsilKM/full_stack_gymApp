@@ -3,6 +3,10 @@ import '../widgets/gym_bottom_bar.dart';
 import 'dashboard_screen.dart';
 import 'member_list_screen.dart';
 import 'profile_screen.dart';
+import 'plans_screen.dart';
+import 'payments_screen.dart';
+import 'add_member_screen.dart';
+import 'add_plan_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -28,7 +32,11 @@ class _MainScreenState extends State<MainScreen> {
       floatingActionButton: (_selectedTab == MainTab.members || _selectedTab == MainTab.plans)
           ? FloatingActionButton(
               onPressed: () {
-                // Handle Add Member or Plan
+                if (_selectedTab == MainTab.members) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddMemberScreen()));
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddPlanScreen()));
+                }
               },
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.black,
@@ -46,9 +54,9 @@ class _MainScreenState extends State<MainScreen> {
       case MainTab.members:
         return const MemberListScreen();
       case MainTab.payments:
-        return const _PlaceholderScreen(title: "Payments", description: "Payment history and management");
+        return const PaymentsScreen();
       case MainTab.plans:
-        return const _PlaceholderScreen(title: "Membership Plans", description: "Manage your gym membership plans");
+        return const PlansScreen();
       case MainTab.profile:
         return const ProfileScreen();
     }

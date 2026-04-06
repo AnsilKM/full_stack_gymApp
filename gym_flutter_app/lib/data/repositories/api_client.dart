@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 final apiClientProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://api.progym.com',
+      baseUrl: 'https://full-stack-gymapp.onrender.com', // Update this for local dev: 'http://10.0.2.2:3000' for Android or 'http://localhost:3000' for iOS
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ),
@@ -23,24 +23,17 @@ final apiClientProvider = Provider<Dio>((ref) {
       },
     ),
   );
+
+  // Add LogInterceptor to see detailed request/response logs in logcat
+  dio.interceptors.add(LogInterceptor(
+    requestHeader: true,
+    requestBody: true,
+    responseHeader: true,
+    responseBody: true,
+    error: true,
+  ));
+
   return dio;
 });
 
-class ApiResponse<T> {
-  final bool status;
-  final String message;
-  final T? data;
-
-  ApiResponse({required this.status, required this.message, this.data});
-
-  factory ApiResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(dynamic json) fromJsonData,
-  ) {
-    return ApiResponse(
-      status: json['status'] ?? false,
-      message: json['message'] ?? '',
-      data: json['data'] != null ? fromJsonData(json['data']) : null,
-    );
-  }
-}
+// ApiResponse was moved to ../models/api_response.dart

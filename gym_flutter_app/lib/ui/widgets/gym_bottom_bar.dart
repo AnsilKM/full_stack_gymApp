@@ -63,8 +63,8 @@ class _BottomBarItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(horizontal: isSelected ? 12 : 8, vertical: 6),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.symmetric(horizontal: isSelected ? 10 : 6, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
         decoration: BoxDecoration(
           color: isSelected ? theme.colorScheme.onSurface.withValues(alpha: 0.05) : Colors.transparent,
           borderRadius: BorderRadius.circular(24),

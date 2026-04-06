@@ -5,6 +5,8 @@ import 'ui/screens/login_screen.dart';
 import 'ui/screens/main_screen.dart';
 import 'logic/providers/auth_provider.dart';
 
+import 'logic/providers/notification_provider.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: GymApp()));
@@ -20,6 +22,7 @@ class GymApp extends ConsumerWidget {
       title: 'ProGym Management',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      builder: (context, child) => GlobalNotificationListener(child: child!),
       home: authState.when(
         data: (isLoggedIn) => isLoggedIn ? const MainScreen() : const LoginScreen(),
         loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
