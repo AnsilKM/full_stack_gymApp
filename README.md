@@ -1,77 +1,112 @@
-# 🏋️ Gym Management SaaS - Setup & Execution Guide
+# 🏋️ Gym Management Ecosystem
 
-This document provides the definitive steps to run the complete stack (Backend, Web Dashboard, and Mobile App) on your local machine.
+A full-stack gym management system built end-to-end — cross-platform mobile app, RESTful backend, and an admin web dashboard. Designed to handle real-world gym operations: member management, role-based access, and automated membership lifecycles.
 
 ---
 
-## 1. 🗄️ Start the Database
-The backend requires **PostgreSQL** to be running.
+## 📱 Mobile App — Kotlin Multiplatform (KMP)
+
+Built with **Kotlin Multiplatform + Compose Multiplatform**, sharing 90%+ of business logic across Android and iOS from a single codebase.
+
+**Tech Stack**
+- Kotlin Multiplatform (KMP)
+- Compose Multiplatform (UI)
+- Koin (Dependency Injection)
+- Ktor Client (API communication)
+- Clean Architecture + MVVM
+
+**Features**
+- Member login and profile management
+- View membership status and expiry
+- Role-based screens (Admin / Trainer / Member)
+- Real-time data sync with backend
+
+---
+
+## 🛡️ Backend — NestJS + PostgreSQL
+
+A production-grade REST API built with **NestJS**, backed by **PostgreSQL** via **Prisma ORM**.
+
+**Tech Stack**
+- NestJS (Node.js framework)
+- PostgreSQL + Prisma ORM
+- JWT Authentication
+- Role-Based Access Control (RBAC)
+- TypeScript
+
+**Features**
+- JWT-secured authentication with refresh token support
+- RBAC system for Admin, Trainer, and Member roles
+- Membership lifecycle automation (active → expiring → expired)
+- 10+ REST API endpoints covering users, memberships, billing, and attendance
+- Morgan request logging for debugging
+
+---
+
+## 💻 Admin Dashboard — Next.js
+
+A web-based dashboard built with **Next.js** for gym admins to manage members, memberships, and revenue in real time.
+
+**Tech Stack**
+- Next.js (React framework)
+- Recharts (data visualization)
+- Tailwind CSS
+- TypeScript
+
+**Features**
+- Real-time membership lifecycle overview
+- Revenue metrics and charts via Recharts
+- Member CRUD — add, edit, deactivate members
+- Role-based UI visibility
+
+---
+
+## 🏗️ Architecture Overview
+
+```
+full_stack_gymApp/
+├── GymApp/          → KMP mobile app (Android + iOS)
+├── backend/         → NestJS REST API
+└── dashboard/       → Next.js admin web dashboard
+```
+
+**Security:** JWT tokens secured with RBAC at both API and UI level.  
+**Logging:** Unified logging across all three layers — Logcat (mobile), Morgan (backend), DevTools (dashboard).
+
+---
+
+## 🚀 Running Locally
+
+### 1. Start PostgreSQL
 ```bash
 brew services start postgresql@17
 ```
 
----
-
-## 2. 🛡️ Backend API (NestJS)
-Run the following in a dedicated terminal window:
-
+### 2. Backend (NestJS)
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Sync database schema and generate Prisma client
 npx prisma generate
 npx prisma db push
-
-# Start the server in watch mode
 npm run start:dev
+# Runs at http://localhost:3000
 ```
-*   **Endpoint:** `http://localhost:3000`
-*   **Logs:** Request logs will appear in the terminal via `morgan`.
 
----
-
-## 3. 💻 Admin Web Dashboard (Next.js)
-Run the following in a second dedicated terminal window:
-
+### 3. Admin Dashboard (Next.js)
 ```bash
-# Navigate to dashboard directory
 cd dashboard
-
-# Start the development server (configured for port 3001)
 npm run dev
+# Runs at http://localhost:3001
 ```
-*   **URL:** `http://localhost:3001`
-*   **API Connection:** Automatically configured to reach the backend at `localhost:3000`.
-*   **Browser Logs:** Open DevTools (F12) to see `[API REQUEST]` and `[API SUCCESS]` logs.
+
+### 4. Mobile App (Android)
+- Open `./GymApp` in Android Studio
+- Select the `composeApp` run configuration
+- Launch an Android Emulator
+- App connects to backend via `http://10.0.2.2:3000`
 
 ---
 
-## 4. 📱 Mobile App (Android)
-1.  Open **Android Studio**.
-2.  Open the folder: `./GymApp`
-3.  Select the **`composeApp`** run configuration.
-4.  Launch an **Android Emulator**.
-    *   **Network:** The app is configured to use `http://10.0.2.2:3000` to connect to your Mac's backend.
-    *   **Cleartext:** HTTP traffic is enabled in `AndroidManifest.xml` for development.
+## 👨‍💻 Built By
 
----
-
-## 📝 How to Read Logs
-I have implemented a unified logging system across the whole project.
-
-### In Terminal (Backend/Dashboard)
-You will see raw HTTP logs showing every endpoint reached, the method (GET/POST), and the status code.
-
-### In Android Logcat (Mobile)
-Search/Filter by the following tags:
-*   `API_LOG:` — Shows raw network requests, headers, and bodies.
-*   `APP_LOG:` — Shows application events like "Login Successful", "Deleting Member", etc.
-
-### In Browser Console (Dashboard)
-Look for objects prefixed with:
-*   `[API REQUEST]`
-*   `[API SUCCESS]`
-*   `[API ERROR]`
-
----
+**Muhammed Ansil** — Android & KMP Developer  
+[LinkedIn](https://linkedin.com/in/muhammed-ansil-810212269) · [GitHub](https://github.com/AnsilKM)
