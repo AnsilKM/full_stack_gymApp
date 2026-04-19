@@ -22,13 +22,13 @@ A full-stack gym management system built end-to-end — cross-platform mobile ap
 |-------|-----------|---------|
 | ![Login](screenshots/login.jpeg) | ![Dashboard](screenshots/dashboard.jpeg) | ![Members](screenshots/members.jpeg) |
 
-| Member Profile | Add Member | Membership Plans |
-|----------------|------------|-----------------|
-| ![Profile](screenshots/member_profile.jpeg) | ![Add Member](screenshots/add_member.jpeg) | ![Plans](screenshots/plans.jpeg) |
+| Member Profile | Membership Plans |
+|----------------|-----------------|
+| ![Profile](screenshots/member_profile.jpeg) | ![Plans](screenshots/plans.jpeg) |
 
-| Create Plan | Admin Profile |
+| Create member | Admin Profile |
 |-------------|---------------|
-| ![Create Plan](screenshots/create_member.jpeg) | ![Admin Profile](screenshots/admin_profile.jpeg) |
+| ![Create member](screenshots/create_member.jpeg) | ![Admin Profile](screenshots/admin_profile.jpeg) |
 
 ---
 
